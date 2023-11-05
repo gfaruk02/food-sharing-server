@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config()
 const { MongoClient, ServerApiVersion } = require('mongodb');
+const jwt = require('jsonwebtoken');
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -27,7 +28,16 @@ async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
+        
+        //auth related api
+        app.post('/jwt', async(req, res)=>{
+            const user = req.body;
+            console.log(user);
+            const token = jwt.sign(user, process.env.MY_ACCESS_SECRET_TOKEN, {expiresIn: '1h'});
+            res.send(user)
+        })
 
+        //server related Api
         const foodsCollection = client.db('foodSharing').collection('foods');
         app.get('/foods', async (req, res) => {
             const cursor = foodsCollection.find();
