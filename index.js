@@ -51,6 +51,9 @@ async function run() {
         //server related Api
         const foodsCollection = client.db('foodSharing').collection('foods');
         const foodRequestCollection = client.db('foodSharing').collection('foodRequests');
+
+
+
         app.get('/foods', async (req, res) => {
             const cursor = foodsCollection.find();
             const result = await cursor.toArray();
@@ -58,10 +61,19 @@ async function run() {
 
         })
 
+        //food Request Collection
         app.post('/foodRequests', async(req, res)=>{
             const foodRequest = req.body;
             console.log(foodRequest);
             const result = await foodRequestCollection.insertOne(foodRequest);
+            res.send(result);
+        })
+
+        //add food
+        app.post('/foods', async(req, res)=>{
+            const addfood = req.body;
+            console.log(addfood);
+            const result = await foodsCollection.insertOne(addfood);
             res.send(result);
         })
 
