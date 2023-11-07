@@ -166,8 +166,14 @@ async function run() {
             const result = await foodsCollection.insertOne(addfood);
             res.send(result);
         })
-
-
+        
+        //food delete
+        app.delete('/foods/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await foodsCollection.deleteOne(query);
+            res.send(result);
+        })
 
 
         // Send a ping to confirm a successful connection
