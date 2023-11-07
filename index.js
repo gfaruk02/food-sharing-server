@@ -1,8 +1,9 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config()
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-// const jwt = require('jsonwebtoken');
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -10,12 +11,39 @@ const port = process.env.PORT || 5000;
 //middleware
 
 app.use(cors(
-    // {
-    //     origin: ['http://localhost:5173'],
-    //     credentials: true
-    // }
+    {
+        origin: ['http://localhost:5173'],
+        credentials: true
+    }
 ));
 app.use(express.json());
+app.use(cookieParser())
+
+
+//middleware for secure api
+const logger = (req, res, next)=>{
+    console.log('log: info', req.method, req.url);
+    next();
+}
+
+//verifyToken middleware
+const verifyToken = (req, res, next)=>{
+    const token = req?.cookies?.token;
+    // console.log('token middleware', token);
+// next()
+    //no token
+    if(!token){
+        return res.status(401).send({message: 'Unauthorized Access'})
+    }
+
+    jwt.verify(token, process.env.MY_ACCESS_SECRET_TOKEN, (err, decoded)=>{
+        if(err){
+            return res.status(401).send({message: 'Unauthorized Access'})
+        }
+        req.user = decoded;
+        next();
+    })
+}
 
 
 const uri = `mongodb+srv://${process.env.MY_DB_USER}:${process.env.My_BD_PASS}@cluster0.zjs4f1h.mongodb.net/?retryWrites=true&w=majority`;
@@ -35,18 +63,23 @@ async function run() {
         await client.connect();
 
         // //auth related api
-        // app.post('/jwt', async(req, res)=>{
-        //     const user = req.body;
-        //     console.log(user);
-        //     const token = jwt.sign(user, process.env.MY_ACCESS_SECRET_TOKEN, {expiresIn: '1h'});
-        //     res
-        //     .cookie('token', token, {
-        //         httpOnly: true,
-        //         secure: false,
-        //         // sameSite: 'none'
-        //     })
-        //     .send({success: true})
-        // })
+        app.post('/jwt', async(req, res)=>{
+            const user = req.body;
+            // console.log(user);
+            const token = jwt.sign(user, process.env.MY_ACCESS_SECRET_TOKEN, {expiresIn: '1h'});
+            res
+            .cookie('token', token, {
+                httpOnly: true,
+                secure: false,
+                // sameSite: 'none'
+            })
+            .send({success: true})
+        })
+        app.post('/logout', async(req, res)=>{
+            const user = req.body;
+            console.log('out user', user);
+            res.clearCookie('token', {maxAge: 0}).send({success: true})
+        })
 
         //server related Api
         const foodsCollection = client.db('foodSharing').collection('foods');
@@ -60,8 +93,12 @@ async function run() {
             res.send(result);
 
         })
-        app.get('/food', async (req, res) => {
-            console.log(req.query);
+        app.get('/food', logger, verifyToken, async (req, res) => {
+            // console.log(req.query);
+            // console.log('token owner info', req.user);
+            if(req.user?.email !== req.query?.email){
+                return res.status(403).send({message: 'Forbidden Access'});
+            }
             let query = {};
             if (req.query?.email) {
                 query = { email: req.query.email }
@@ -85,7 +122,7 @@ async function run() {
         //     const result = await foodRequestCollection.find(query).toArray();
         //     res.send(result);
         // })
-        app.get('/foodreruest', async (req, res) => {
+        app.get('/foodreruest',  async (req, res) => {
             // console.log(req.query);
             let query = {};
             if (req.query?.email) {
@@ -141,8 +178,13 @@ async function run() {
         })
 
 
-        app.get('/foods', async (req, res) => {
+        app.get('/foods',logger, verifyToken,async (req, res) => {
             // console.log(req.query.email);
+            // console.log('token owner info', req.user);
+               //check user and token user is same 
+               if(req.user.email !== req.query.email){
+                return res.status(403).send({message: 'Forbidden Access'});
+            }
             let query = {};
             if (req.query?.email) {
                 query = { email: req.query.email }
@@ -174,7 +216,13 @@ async function run() {
             const result = await foodsCollection.deleteOne(query);
             res.send(result);
         })
-
+        //Cancel Request
+        app.delete('/foodRequests/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await foodRequestCollection.deleteOne(query);
+            res.send(result);
+        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
