@@ -70,7 +70,30 @@ async function run() {
             res.send(result);
         })
 
+        app.get('/foodRequests', async (req, res) => {
+            const cursor = foodRequestCollection.find();
+            const result = await cursor.toArray();
+            res.send(result);
 
+        })
+        // app.get('/foodRequests', async (req, res) => {
+        //     // console.log(req.query.email);
+        //     let query = {};
+        //     if (req.query?.email) {
+        //         query = { email: req.query.email }
+        //     }
+        //     const result = await foodRequestCollection.find(query).toArray();
+        //     res.send(result);
+        // })
+        app.get('/foodreruest', async (req, res) => {
+            // console.log(req.query);
+            let query = {};
+            if (req.query?.email) {
+                query = { email: req.query.email }
+            }
+            const result = await foodRequestCollection.find(query).toArray();
+            res.send(result);
+        })
         //get for specific items
         app.get('/foods/:id', async (req, res) => {
             const id = req.params.id;
@@ -128,7 +151,13 @@ async function run() {
             res.send(result);
         })
 
-
+        //food Request Collection
+        app.post('/foodRequests', async (req, res) => {
+            const foodRequest = req.body;
+            console.log(foodRequest);
+            const result = await foodRequestCollection.insertOne(foodRequest);
+            res.send(result);
+        })
 
         //add food
         app.post('/foods', async (req, res) => {
