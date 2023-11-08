@@ -22,7 +22,7 @@ app.use(cookieParser())
 
 //middleware for secure api
 const logger = (req, res, next)=>{
-    console.log('log: info', req.method, req.url);
+    // console.log('log: info', req.method, req.url);
     next();
 }
 
@@ -77,7 +77,7 @@ async function run() {
         })
         app.post('/logout', async(req, res)=>{
             const user = req.body;
-            console.log('out user', user);
+            // console.log('out user', user);
             res.clearCookie('token', {maxAge: 0}).send({success: true})
         })
 
@@ -138,24 +138,15 @@ async function run() {
             const result = await foodsCollection.findOne(query);
             res.send(result)
         })
-        // app.get('/foodRequests/:id', async (req, res) => {
-        //     const id = req.params.id;
-        //     const query = { _id: new ObjectId(id) }
-        //     const options = {
-        //         // Include only the `title` and `imdb` fields in the returned document
-        //         projection: {
+        
+        app.get('/foodRequests/:requistId', async (req, res) => {
+            const requistId = req.params.requistId;
+            const query = { requistId: requistId };
+            const result = await foodRequestCollection.findOne(query);
+            res.send(result)
+        })
 
-        //             userName: 1,
-        //             userEmail: 1,
-        //             userImage: 1,
-        //             time: 1,
-        //             status: 1
-
-        //         },
-        //     };
-        //     const result = await foodRequestCollection.findOne(query, options);
-        //     res.send(result)
-        // })
+        
 
         //update 
         app.put('/foods/:id', async (req, res) => {
@@ -179,9 +170,6 @@ async function run() {
 
 
         app.get('/foods',logger, verifyToken,async (req, res) => {
-            // console.log(req.query.email);
-            // console.log('token owner info', req.user);
-               //check user and token user is same 
                if(req.user.email !== req.query.email){
                 return res.status(403).send({message: 'Forbidden Access'});
             }
@@ -196,7 +184,7 @@ async function run() {
         //food Request Collection
         app.post('/foodRequests', async (req, res) => {
             const foodRequest = req.body;
-            console.log(foodRequest);
+            // console.log(foodRequest);
             const result = await foodRequestCollection.insertOne(foodRequest);
             res.send(result);
         })
@@ -204,7 +192,7 @@ async function run() {
         //add food
         app.post('/foods', async (req, res) => {
             const addfood = req.body;
-            console.log(addfood);
+            // console.log(addfood);
             const result = await foodsCollection.insertOne(addfood);
             res.send(result);
         })
