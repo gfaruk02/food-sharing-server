@@ -117,15 +117,6 @@ async function run() {
             res.send(result);
 
         })
-        // app.get('/foodRequests', async (req, res) => {
-        //     // console.log(req.query.email);
-        //     let query = {};
-        //     if (req.query?.email) {
-        //         query = { email: req.query.email }
-        //     }
-        //     const result = await foodRequestCollection.find(query).toArray();
-        //     res.send(result);
-        // })
         app.get('/foodreruest',  async (req, res) => {
             // console.log(req.query);
             let query = {};
@@ -172,44 +163,19 @@ async function run() {
             res.send(result);
         })
 
-
-                //update delivery status
                 app.put('/foodRequests/:id', async (req, res) => {
                     const id = req.params.id;
-                    const filter = { _id: new ObjectId(id) }
+                    const filter = { _id: new ObjectId(id) };
                     const options = { upsert: true };
                     const updatedfood = req.body;
                     const food = {
                         $set: {
                             status: updatedfood.status,
                         }
-                    }
+                    };
                     const result = await foodRequestCollection.updateOne(filter, food, options);
                     res.send(result);
-                })
-                // app.put('/foodRequests/:requistId', async (req, res) => {
-                //     const id = req.params.requistId;
-                //     const filter = { _id: new ObjectId(id) };
-                //     const options = { upsert: true };
-                //     const updatedfood = req.body;
-                //     const food = {
-                //         $set: {
-                //             status: updatedfood.status,
-                //         }
-                //     };
-                    
-                //     try {
-                //         const result = await foodsCollection.updateOne(filter, food, options);
-                //         if (result.modifiedCount > 0) {
-                //             return res.status(200).json({ success: true, message: 'Food request updated successfully.' });
-                //         } else {
-                //             return res.status(404).json({ success: false, message: 'Food request not found.' });
-                //         }
-                //     } catch (error) {
-                //         console.error("Error updating food request:", error);
-                //         return res.status(500).json({ success: false, message: 'Internal server error.' });
-                //     }
-                // });
+                });
 
         app.get('/foods',logger, verifyToken,async (req, res) => {
                if(req.user.email !== req.query.email){
