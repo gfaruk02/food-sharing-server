@@ -22,3 +22,4 @@ demo
 *.njsproj
 *.sln
 *.sw?
+.vercel

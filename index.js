@@ -13,7 +13,6 @@ const port = process.env.PORT || 5000;
 app.use(cors(
     {
         origin: [
-
             'https://assignment-11-7-food-sharing.web.app',
             'https://assignment-11-7-food-sharing.firebaseapp.com'
         ],
@@ -27,16 +26,13 @@ app.use(cookieParser())
 
 //middleware for secure api
 const logger = (req, res, next)=>{
-    // console.log('log: info', req.method, req.url);
+    console.log('log: info', req.method, req.url);
     next();
 }
 
 //verifyToken middleware
 const verifyToken = (req, res, next)=>{
     const token = req?.cookies?.token;
-    // console.log('token middleware', token);
-// next()
-    //no token
     if(!token){
         return res.status(401).send({message: 'Unauthorized Access'})
     }
@@ -72,19 +68,20 @@ async function run() {
             const user = req.body;
             // console.log(user);
             const token = jwt.sign(user, process.env.MY_ACCESS_SECRET_TOKEN, {expiresIn: '1h'});
-            res
-            .cookie('token', token, {
+            res.cookie('token', token, {
                 httpOnly: true,
-                secure: false,
-                // sameSite: 'none'
+                secure: true,
+                sameSite: 'none'
             })
             .send({success: true})
         })
-        app.post('/logout', async(req, res)=>{
-            const user = req.body;
-            // console.log('out user', user);
-            res.clearCookie('token', {maxAge: 0}).send({success: true})
-        })
+
+    //logout cookie clear
+    app.post('/logOut', async(req, res)=>{
+        const user = req.body;
+        console.log('login Out', user);
+        res.clearCookie('token', {maxAge: 0}).send({success: true})
+    })
 
         //server related Api
         const foodsCollection = client.db('foodSharing').collection('foods');
@@ -98,7 +95,9 @@ async function run() {
             res.send(result);
 
         })
-        app.get('/food', logger, verifyToken, async (req, res) => {
+
+        //manage foods
+        app.get('/food',logger, verifyToken, async (req, res) => {
             // console.log(req.query);
             // console.log('token owner info', req.user);
             if(req.user?.email !== req.query?.email){
@@ -173,6 +172,44 @@ async function run() {
             res.send(result);
         })
 
+
+                //update delivery status
+                app.put('/foodRequests/:id', async (req, res) => {
+                    const id = req.params.id;
+                    const filter = { _id: new ObjectId(id) }
+                    const options = { upsert: true };
+                    const updatedfood = req.body;
+                    const food = {
+                        $set: {
+                            status: updatedfood.status,
+                        }
+                    }
+                    const result = await foodRequestCollection.updateOne(filter, food, options);
+                    res.send(result);
+                })
+                // app.put('/foodRequests/:requistId', async (req, res) => {
+                //     const id = req.params.requistId;
+                //     const filter = { _id: new ObjectId(id) };
+                //     const options = { upsert: true };
+                //     const updatedfood = req.body;
+                //     const food = {
+                //         $set: {
+                //             status: updatedfood.status,
+                //         }
+                //     };
+                    
+                //     try {
+                //         const result = await foodsCollection.updateOne(filter, food, options);
+                //         if (result.modifiedCount > 0) {
+                //             return res.status(200).json({ success: true, message: 'Food request updated successfully.' });
+                //         } else {
+                //             return res.status(404).json({ success: false, message: 'Food request not found.' });
+                //         }
+                //     } catch (error) {
+                //         console.error("Error updating food request:", error);
+                //         return res.status(500).json({ success: false, message: 'Internal server error.' });
+                //     }
+                // });
 
         app.get('/foods',logger, verifyToken,async (req, res) => {
                if(req.user.email !== req.query.email){
