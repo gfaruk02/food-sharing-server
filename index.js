@@ -80,7 +80,11 @@ async function run() {
     app.post('/logOut', async(req, res)=>{
         const user = req.body;
         console.log('login Out', user);
-        res.clearCookie('token', {maxAge: 0}).send({success: true})
+        res.clearCookie('token', {
+            maxAge: 0,
+            secure:process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production'? 'none':'strict',
+        }).send({success: true})
     })
 
         //server related Api
