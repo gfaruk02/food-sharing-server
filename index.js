@@ -14,7 +14,7 @@ app.use(cors(
     {
         origin: [
             'https://assignment-11-7-food-sharing.web.app',
-            'https://assignment-11-7-food-sharing.firebaseapp.com'
+            'https://assignment-11-7-food-sharing.firebaseapp.com',
         ],
 
         credentials: true
@@ -25,21 +25,21 @@ app.use(cookieParser())
 
 
 //middleware for secure api
-const logger = (req, res, next)=>{
+const logger = (req, res, next) => {
     console.log('log: info', req.method, req.url);
     next();
 }
 
 //verifyToken middleware
-const verifyToken = (req, res, next)=>{
+const verifyToken = (req, res, next) => {
     const token = req?.cookies?.token;
-    if(!token){
-        return res.status(401).send({message: 'Unauthorized Access'})
+    if (!token) {
+        return res.status(401).send({ message: 'Unauthorized Access' })
     }
 
-    jwt.verify(token, process.env.MY_ACCESS_SECRET_TOKEN, (err, decoded)=>{
-        if(err){
-            return res.status(401).send({message: 'Unauthorized Access'})
+    jwt.verify(token, process.env.MY_ACCESS_SECRET_TOKEN, (err, decoded) => {
+        if (err) {
+            return res.status(401).send({ message: 'Unauthorized Access' })
         }
         req.user = decoded;
         next();
@@ -64,28 +64,28 @@ async function run() {
         // await client.connect();
 
         // //auth related api
-        app.post('/jwt', async(req, res)=>{
+        app.post('/jwt', async (req, res) => {
             const user = req.body;
             // console.log(user);
-            const token = jwt.sign(user, process.env.MY_ACCESS_SECRET_TOKEN, {expiresIn: '1h'});
+            const token = jwt.sign(user, process.env.MY_ACCESS_SECRET_TOKEN, { expiresIn: '1h' });
             res.cookie('token', token, {
                 httpOnly: true,
                 secure: true,
                 sameSite: 'none'
             })
-            .send({success: true})
+                .send({ success: true })
         })
 
-    //logout cookie clear
-    app.post('/logOut', async(req, res)=>{
-        const user = req.body;
-        console.log('login Out', user);
-        res.clearCookie('token', {
-            maxAge: 0,
-            secure:process.env.NODE_ENV === 'production',
-            sameSite: process.env.NODE_ENV === 'production'? 'none':'strict',
-        }).send({success: true})
-    })
+        //logout cookie clear
+        app.post('/logOut', async (req, res) => {
+            const user = req.body;
+            console.log('login Out', user);
+            res.clearCookie('token', {
+                maxAge: 0,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict'
+            }).send({ success: true })
+        })
 
         //server related Api
         const foodsCollection = client.db('foodSharing').collection('foods');
@@ -101,11 +101,11 @@ async function run() {
         })
 
         //manage foods
-        app.get('/food',logger, verifyToken, async (req, res) => {
+        app.get('/food', logger, verifyToken, async (req, res) => {
             // console.log(req.query);
             // console.log('token owner info', req.user);
-            if(req.user?.email !== req.query?.email){
-                return res.status(403).send({message: 'Forbidden Access'});
+            if (req.user?.email !== req.query?.email) {
+                return res.status(403).send({ message: 'Forbidden Access' });
             }
             let query = {};
             if (req.query?.email) {
@@ -121,7 +121,7 @@ async function run() {
             res.send(result);
 
         })
-        app.get('/foodreruest',  async (req, res) => {
+        app.get('/foodreruest', async (req, res) => {
             // console.log(req.query);
             let query = {};
             if (req.query?.email) {
@@ -137,7 +137,7 @@ async function run() {
             const result = await foodsCollection.findOne(query);
             res.send(result)
         })
-        
+
         app.get('/foodRequests/:requistId', async (req, res) => {
             const requistId = req.params.requistId;
             const query = { requistId: requistId };
@@ -145,7 +145,7 @@ async function run() {
             res.send(result)
         })
 
-        
+
 
         //update 
         app.put('/foods/:id', async (req, res) => {
@@ -167,23 +167,23 @@ async function run() {
             res.send(result);
         })
 
-                app.put('/foodRequests/:id', async (req, res) => {
-                    const id = req.params.id;
-                    const filter = { _id: new ObjectId(id) };
-                    const options = { upsert: true };
-                    const updatedfood = req.body;
-                    const food = {
-                        $set: {
-                            status: updatedfood.status,
-                        }
-                    };
-                    const result = await foodRequestCollection.updateOne(filter, food, options);
-                    res.send(result);
-                });
+        app.put('/foodRequests/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const options = { upsert: true };
+            const updatedfood = req.body;
+            const food = {
+                $set: {
+                    status: updatedfood.status,
+                }
+            };
+            const result = await foodRequestCollection.updateOne(filter, food, options);
+            res.send(result);
+        });
 
-        app.get('/foods',logger, verifyToken,async (req, res) => {
-               if(req.user.email !== req.query.email){
-                return res.status(403).send({message: 'Forbidden Access'});
+        app.get('/foods', logger, verifyToken, async (req, res) => {
+            if (req.user.email !== req.query.email) {
+                return res.status(403).send({ message: 'Forbidden Access' });
             }
             let query = {};
             if (req.query?.email) {
@@ -208,7 +208,7 @@ async function run() {
             const result = await foodsCollection.insertOne(addfood);
             res.send(result);
         })
-        
+
         //food delete
         app.delete('/foods/:id', async (req, res) => {
             const id = req.params.id;
