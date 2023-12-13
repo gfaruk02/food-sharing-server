@@ -90,6 +90,7 @@ async function run() {
         //server related Api
         const foodsCollection = client.db('foodSharing').collection('foods');
         const foodRequestCollection = client.db('foodSharing').collection('foodRequests');
+        const blogCollection = client.db('foodSharing').collection('blog');
 
 
 
@@ -224,6 +225,21 @@ async function run() {
             res.send(result);
         })
 
+
+        //blog api
+
+        app.get('/blog', async (req, res) => {
+            const result = await blogCollection.find().toArray();
+            res.send(result);
+        })
+
+        app.post('/blog', async (req, res) => {
+            const addblog = req.body;
+            const result = await blogCollection.insertOne(addblog);
+            res.send(result);
+        })
+
+        
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
